@@ -12,16 +12,18 @@ import {
   IconButton,
   InputAdornment,
   Tooltip,
-  useTheme,
   Snackbar,
   Alert,
   RadioGroup,
   Radio,
   LinearProgress,
+  Link,
+  useTheme,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import InfoIcon from "@mui/icons-material/Info";
+import GitHubIcon from "@mui/icons-material/GitHub";
 import {
   calculateComplexity,
   generatePassword,
@@ -404,6 +406,20 @@ export default function Home() {
             </Box>
           </Grid>
         </Grid>
+      </Box>
+      <Box sx={{ textAlign: "center", marginTop: 4 }}>
+        <Typography variant="body2">
+          Enjoying this tool? ⭐ Star it on{" "}
+          <GitHubIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: "text-bottom" }} />
+          <Link
+            href="https://github.com/liketurbo/password-generator"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            GitHub
+          </Link>
+          !
+        </Typography>
       </Box>
       <Snackbar
         open={snackbarOpen}
