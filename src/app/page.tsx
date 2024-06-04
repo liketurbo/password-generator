@@ -18,7 +18,9 @@ import {
   Radio,
   LinearProgress,
   Link,
+  GlobalStyles,
   useTheme,
+  lighten,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -170,6 +172,11 @@ export default function Home() {
 
   return (
     <Container maxWidth="sm">
+      <GlobalStyles
+        styles={{
+          body: { backgroundColor: lighten(theme.palette.primary.light, 0.8) },
+        }}
+      />
       <Box my={4}>
         <Typography variant="h4" gutterBottom sx={{ textAlign: "center" }}>
           Password Generator
@@ -410,7 +417,10 @@ export default function Home() {
       <Box sx={{ textAlign: "center", marginTop: 4 }}>
         <Typography variant="body2">
           Enjoying this tool? ⭐ Star it on{" "}
-          <GitHubIcon fontSize="small" sx={{ mr: 0.5, verticalAlign: "text-bottom" }} />
+          <GitHubIcon
+            fontSize="small"
+            sx={{ mr: 0.5, verticalAlign: "text-bottom" }}
+          />
           <Link
             href="https://github.com/liketurbo/password-generator"
             target="_blank"
