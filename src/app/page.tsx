@@ -1,113 +1,427 @@
-import Image from "next/image";
+"use client";
+import { useState, ChangeEvent, useEffect } from "react";
+import {
+  Container,
+  Typography,
+  Slider,
+  FormControlLabel,
+  Checkbox,
+  TextField,
+  Box,
+  Grid,
+  IconButton,
+  InputAdornment,
+  Tooltip,
+  useTheme,
+  Snackbar,
+  Alert,
+  RadioGroup,
+  Radio,
+  LinearProgress,
+} from "@mui/material";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import InfoIcon from "@mui/icons-material/Info";
+import {
+  calculateComplexity,
+  generatePassword,
+} from "@/utils/passwordGenerator";
+import { PasswordOptions, Preset } from "@/types";
 
 export default function Home() {
+  const theme = useTheme();
+
+  const [length, setLength] = useState<number>(12);
+  const [options, setOptions] = useState<PasswordOptions>({
+    lowercase: true,
+    uppercase: true,
+    numbers: true,
+    symbols: true,
+  });
+  const [password, setPassword] = useState<string>("");
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [preset, setPreset] = useState<Preset>("allCharacters");
+  const [complexity, setComplexity] = useState<number>(0);
+
+  useEffect(() => {
+    const newPassword = generatePassword(length, options, preset);
+    setPassword(newPassword);
+    setComplexity(calculateComplexity(newPassword));
+  }, [length, options, preset]);
+
+  useEffect(() => {
+    handlePreset(preset);
+  }, [preset]);
+
+  function handleChangeLength(event: Event, newValue: number | number[]): void {
+    setLength(newValue as number);
+  }
+
+  function handleInputChange(event: ChangeEvent<HTMLInputElement>): void {
+    const value = parseInt(event.target.value, 10);
+    if (!isNaN(value)) {
+      setLength(value);
+    }
+  }
+
+  function handleChangeOption(event: ChangeEvent<HTMLInputElement>): void {
+    const { name, checked } = event.target;
+
+    const newOptions = {
+      ...options,
+      [name]: checked,
+    };
+
+    if (
+      !newOptions.lowercase &&
+      !newOptions.uppercase &&
+      !newOptions.numbers &&
+      !newOptions.symbols
+    ) {
+      return;
+    }
+
+    setOptions(newOptions);
+  }
+
+  function handleCopyToClipboard(): void {
+    navigator.clipboard.writeText(password).then(() => {
+      setSnackbarOpen(true);
+    });
+  }
+
+  function handleCloseSnackbar(
+    _?: Event | React.SyntheticEvent,
+    reason?: string
+  ) {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  }
+
+  function handleRefreshPassword(): void {
+    const newPassword = generatePassword(length, options, preset);
+    setPassword(newPassword);
+  }
+
+  function handlePreset(preset: Preset): void {
+    switch (preset) {
+      case "easyToSay":
+        setOptions({
+          lowercase: true,
+          uppercase: true,
+          numbers: false,
+          symbols: false,
+        });
+        break;
+      case "easyToRead":
+        setOptions({
+          lowercase: true,
+          uppercase: true,
+          numbers: true,
+          symbols: true,
+        });
+        break;
+      case "allCharacters":
+        setOptions({
+          lowercase: true,
+          uppercase: true,
+          numbers: true,
+          symbols: true,
+        });
+        break;
+      default:
+        break;
+    }
+  }
+
+  function getProgressColor(complexity: number) {
+    if (complexity < 40) {
+      return theme.palette.error.main;
+    } else if (complexity < 70) {
+      return theme.palette.warning.main;
+    } else {
+      return theme.palette.success.main;
+    }
+  }
+
+  function getStrengthText(complexity: number): string {
+    if (complexity < 40) {
+      return "Weak";
+    } else if (complexity < 70) {
+      return "Medium";
+    } else {
+      return "Strong";
+    }
+  }
+
+  function getStrengthColor(complexity: number): string {
+    if (complexity < 40) {
+      return theme.palette.error.main;
+    } else if (complexity < 70) {
+      return theme.palette.warning.main;
+    } else {
+      return theme.palette.success.main;
+    }
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <Container maxWidth="sm">
+      <Box my={4}>
+        <Typography variant="h4" gutterBottom sx={{ textAlign: "center" }}>
+          Password Generator
+        </Typography>
+        <Typography
+          variant="subtitle1"
+          gutterBottom
+          sx={{ textAlign: "center" }}
+        >
+          A plain password generator without ads or cookies, unlike LastPass.
+        </Typography>
+      </Box>
+      <Box
+        my={4}
+        sx={{
+          backgroundColor: theme.palette.common.white,
+          padding: 4,
+          borderRadius: 2,
+        }}
+      >
+        <TextField
+          fullWidth
+          label="Generated Password"
+          value={password}
+          InputLabelProps={{ shrink: true }}
+          InputProps={{
+            readOnly: true,
+            endAdornment: (
+              <InputAdornment position="end">
+                <Tooltip title="Copy">
+                  <IconButton
+                    aria-label="copy to clipboard"
+                    onClick={handleCopyToClipboard}
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Generate">
+                  <IconButton
+                    aria-label="generate new password"
+                    onClick={handleRefreshPassword}
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+              </InputAdornment>
+            ),
+          }}
+          variant="outlined"
+          margin="normal"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: theme.palette.grey[400],
+              },
+              "&:hover fieldset": {
+                borderColor: theme.palette.grey[400],
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: theme.palette.grey[400],
+                borderWidth: 1,
+              },
+            },
+            "& .MuiInputLabel-root": {
+              "&.Mui-focused": {
+                color: theme.palette.grey[600],
+              },
+            },
+          }}
         />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Typography
+          variant="body1"
+          gutterBottom
+          sx={{
+            marginTop: 1,
+            color: getStrengthColor(complexity),
+          }}
         >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+          {getStrengthText(complexity)}
+        </Typography>
+        <LinearProgress
+          variant="determinate"
+          value={complexity}
+          sx={{
+            marginTop: 2,
+            height: 10,
+            borderRadius: 5,
+            backgroundColor: theme.palette.grey[300],
+            "& .MuiLinearProgress-bar": {
+              backgroundColor: getProgressColor(complexity),
+            },
+          }}
+        />
+      </Box>
+      <Box
+        sx={{
+          backgroundColor: theme.palette.common.white,
+          padding: 4,
+          borderRadius: 2,
+        }}
+      >
+        <Typography variant="h6" gutterBottom>
+          Customize your password
+        </Typography>
+        <Grid
+          container
+          justifyContent="space-between"
+          spacing={2}
+          flexWrap="nowrap"
         >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
+          <Grid
+            container
+            alignItems="center"
+            columnSpacing={2}
+            item
+            xs={6}
+            flexBasis={100}
+          >
+            <Grid item>
+              <TextField
+                type="number"
+                value={length}
+                onChange={handleInputChange}
+                inputProps={{ min: 1, max: 50 }}
+                label="Length"
+                variant="outlined"
+                margin="normal"
+                style={{ width: "80px" }}
+              />
+            </Grid>
+            <Grid item>
+              <Slider
+                value={length}
+                onChange={handleChangeLength}
+                aria-labelledby="password-length-slider"
+                valueLabelDisplay="auto"
+                step={1}
+                min={1}
+                max={50}
+                style={{ width: "200px" }}
+              />
+            </Grid>
+          </Grid>
+          <Grid item>
+            <RadioGroup
+              row
+              aria-label="presets"
+              name="presets"
+              value={preset}
+              onChange={(event) => setPreset(event.target.value as Preset)}
+            >
+              <Box display="flex" alignItems="center">
+                <FormControlLabel
+                  value="easyToSay"
+                  control={<Radio />}
+                  label="Easy to Say"
+                />
+                <Tooltip title="Avoids numbers and special characters">
+                  <IconButton size="small">
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Box display="flex" alignItems="center">
+                <FormControlLabel
+                  value="easyToRead"
+                  control={<Radio />}
+                  label="Easy to Read"
+                />
+                <Tooltip title="Avoids ambiguous characters like l, 1, O, and 0">
+                  <IconButton size="small">
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Box display="flex" alignItems="center">
+                <FormControlLabel
+                  value="allCharacters"
+                  control={<Radio />}
+                  label="All Characters"
+                />
+                <Tooltip title="Any character combinations like !, 7, h, K, and l1">
+                  <IconButton size="small">
+                    <InfoIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            </RadioGroup>
+          </Grid>
+          <Grid item>
+            <Box display="flex" flexDirection="column">
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={options.lowercase}
+                    onChange={handleChangeOption}
+                    name="lowercase"
+                  />
+                }
+                label="Lowercase"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={options.uppercase}
+                    onChange={handleChangeOption}
+                    name="uppercase"
+                  />
+                }
+                label="Uppercase"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={options.numbers}
+                    onChange={handleChangeOption}
+                    name="numbers"
+                    disabled={preset === "easyToSay"}
+                  />
+                }
+                label="Numbers"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={options.symbols}
+                    onChange={handleChangeOption}
+                    name="symbols"
+                    disabled={preset === "easyToSay"}
+                  />
+                }
+                label="Symbols"
+              />
+            </Box>
+          </Grid>
+        </Grid>
+      </Box>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{
+          horizontal: "right",
+          vertical: "bottom",
+        }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="success"
+          sx={{ width: "100%" }}
         >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+          Copied
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 }
